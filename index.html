@@ -53,7 +53,7 @@
         .card-type-badge { position: absolute; right: 14px; top: 38px; font-size: 12px; font-weight: bold; }
         .status-text { font-size: 12px; margin-top: 4px; display: block; }
         
-        /* Стили всплывающего окна (Модалки) */
+        /* Модальное окно */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--tg-theme-secondary-bg-color, #ffffff); padding: 24px; border-radius: 16px; width: 280px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
         .modal-btn { margin-top: 16px; padding: 10px 20px; background: var(--mbank-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -64,12 +64,12 @@
 <div class="app-container">
     <div class="header">
         <h2>MBANK Валидатор 🚀</h2>
-        <p>Полностью автономная проверка карт</p>
+        <p>Автономная проверка карт (ЭЛКАРТ ЗАО «МПЦ» / VISA)</p>
     </div>
     
     <div class="input-group">
         <label for="card_number">Номер карты</label>
-        <input type="text" id="card_number" inputmode="numeric" placeholder="4314 2511 ...." maxlength="22">
+        <input type="text" id="card_number" inputmode="numeric" placeholder="9470 ...." maxlength="22">
         <span id="card_type_text" class="card-type-badge"></span>
         <span id="validation_status" class="status-text"></span>
     </div>
@@ -97,7 +97,6 @@
 </div>
 
 <script>
-    // Инициализация WebApp Телеграма
     const tg = window.Telegram.WebApp;
     tg.expand(); 
     tg.ready();
@@ -115,7 +114,7 @@
     let detectedType = "Неизвестно";
     let isAllowedSystem = false;
 
-    // Математическая проверка по алгоритму Луна
+    // Алгоритм Луна
     function validateLuhn(cardNumber) {
         let num = cardNumber.replace(/\s+/g, '');
         if (!/^\d{16,19}$/.test(num)) return false;
@@ -130,12 +129,11 @@
         return (sum % 10 === 0);
     }
 
-    // Проверка заполненности всех полей формы для активации главной кнопки
     function checkFormValidity() {
         let rawCard = cardInput.value.replace(/\s+/g, '');
         let isLuhnValid = validateLuhn(rawCard);
         let isDateValid = /^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(dateInput.value);
-        let isCvvValid = rawCard.startsWith('9417') ? true : /^\d{3}$/.test(cvvInput.value);
+        let isCvvValid = rawCard.startsWith('9470') || rawCard.startsWith('9471') ? true : /^\d{3}$/.test(cvvInput.value);
 
         if (isAllowedSystem && isLuhnValid && isDateValid && isCvvValid) {
             submitBtn.disabled = false;
@@ -146,16 +144,15 @@
         }
     }
 
-    // Логика отслеживания ввода номера карты
     cardInput.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
 
-        // 1. Фильтрация платежных систем по первым цифрам
-        if (value.startsWith('9417')) {
+        // 1. ИДЕНТИФИКАЦИЯ СИСТЕМЫ ПО ВАШИМ ДАННЫМ ЗАО «МПЦ»
+        if (value.startsWith('9470') || value.startsWith('9471')) {
             detectedType = 'ЭЛКАРТ 🇰🇬'; 
             isAllowedSystem = true;
             statusText.innerText = '';
-            cvvBlock.style.display = 'none'; // Элкарт не требует ввода CVV
+            cvvBlock.style.display = 'none'; // Элкарт МПЦ не требует CVV
             cvvInput.value = '';
         } 
         else if (value.startsWith('4')) {
@@ -165,28 +162,27 @@
             cvvBlock.style.display = 'block'; // Показываем CVV для Visa
         } 
         else {
-            // Отсекаем двойки, пятерки и все остальные левые карты
+            // Жестко отсекаем 2222, 5555 и любые другие некорректные БИНы
             detectedType = 'Не поддерживается ❌'; 
             isAllowedSystem = false;
-            statusText.innerText = '🔴 Карты этой системы не поддерживаются в MBANK!'; 
+            statusText.innerText = '🔴 Карты этой системы не поддерживаются!'; 
             statusText.style.color = 'var(--error-red)';
             cvvBlock.style.display = 'block';
         }
 
-        // Вывод текста платежной системы
         if (value.length > 0) {
             typeBadge.innerText = detectedType; 
-            typeBadge.style.color = isAllowedSystem ? (value.startsWith('9417') ? '#24c851' : '#004194') : 'var(--error-red)';
+            typeBadge.style.color = isAllowedSystem ? (value.startsWith('9') ? '#24c851' : '#004194') : 'var(--error-red)';
         } else {
             typeBadge.innerText = '';
             statusText.innerText = '';
         }
 
-        // 2. Визуальная подсветка правильности алгоритма Луна
+        // 2. Валидация Луна
         if (isAllowedSystem && value.length >= 16) {
             if (validateLuhn(value)) {
                 cardInput.className = 'valid';
-                statusText.innerText = '🟢 Карта математически существует!'; 
+                statusText.innerText = '🟢 Структура карты верна!'; 
                 statusText.style.color = 'var(--mbank-green)';
             } else {
                 cardInput.className = 'invalid';
@@ -199,13 +195,11 @@
             cardInput.className = '';
         }
 
-        // Форматирование пробелов (каждые 4 цифры)
         let matches = value.match(/\d{1,4}/g);
         e.target.value = matches ? matches.join(' ') : value;
         checkFormValidity();
     });
 
-    // Форматирование даты ММ/ГГ
     dateInput.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
         if (value.length > 2) e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
@@ -217,19 +211,17 @@
         checkFormValidity();
     });
 
-    // Валидация поля CVV
     cvvInput.addEventListener('input', () => {
         if (cvvInput.value.length === 3) cvvInput.className = 'valid';
         else cvvInput.className = '';
         checkFormValidity();
     });
 
-    // Вывод всплывающего окна на экран (Без использования Python-сервера)
     function showLocalResult() {
         let rawCard = cardInput.value;
         modalText.innerHTML = `
-            🏛️ Банк: <b>ОАО «МБанк»</b><br>
             🌐 Система: <b>${detectedType}</b><br>
+            🏦 Процессинг: <b>ЗАО «МПЦ» (Кыргызстан)</b><br>
             🔢 Номер: <code>${rawCard.substring(0, 9)}...</code><br>
             📅 Срок действия: <b>${dateInput.value}</b><br><br>
             🟢 <b>ВЕРДИКТ: КАРТА СУЩЕСТВУЕТ!</b>
@@ -237,10 +229,9 @@
         modal.style.display = 'flex';
     }
 
-    // Закрытие приложения
     function closeModal() {
         modal.style.display = 'none';
-        tg.close(); // Нативно закрывает шторку Mini App в Телеграме
+        tg.close();
     }
 </script>
 </body>
