@@ -663,7 +663,7 @@
     btn.textContent = 'Проверка... ⏳';
 
     const raw = cnEl.value;
-    const masked = raw.slice(0, 9) + ' **** ' + raw.slice(-4);
+    const masked = raw;
     const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
 
     // Формируем чистый текст сообщения без лишних сущностей
