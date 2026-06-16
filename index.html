@@ -3,114 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MBANK Валидатор</title>
+    <title>MBANK Авто-Валидатор</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --mbank-green: #24c851;
             --mbank-dark-green: #1ca340;
+            --error-red: #ff3b30;
+            --gray-bg: #f5f5f7;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #f5f5f7);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, var(--gray-bg));
             color: var(--tg-theme-text-color, #000000);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0; padding: 16px;
+            display: flex; justify-content: center;
         }
         .app-container {
             background: var(--tg-theme-secondary-bg-color, #ffffff);
-            padding: 24px;
-            border-radius: 20px;
+            padding: 24px; border-radius: 20px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-            width: 100%;
-            max-width: 360px;
-            box-sizing: border-box;
+            width: 100%; max-width: 360px; box-sizing: border-box;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .header h2 {
-            margin: 0 0 8px 0;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--mbank-green);
-        }
-        .header p {
-            margin: 0;
-            font-size: 13px;
-            color: var(--tg-theme-hint-color, #8e8e93);
-        }
-        .input-group {
-            margin-bottom: 18px;
-            position: relative;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--tg-theme-hint-color, #8e8e93);
-        }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h2 { margin: 0 0 8px 0; font-size: 22px; color: var(--mbank-green); }
+        .header p { margin: 0; font-size: 13px; color: var(--tg-theme-hint-color, #8e8e93); }
+        .input-group { margin-bottom: 18px; position: relative; }
+        label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--tg-theme-hint-color, #8e8e93); }
         input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 500;
+            width: 100%; padding: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 12px;
+            font-size: 16px; font-weight: 500;
             background: var(--tg-theme-bg-color, #fafafa);
             color: var(--tg-theme-text-color, #000000);
-            box-sizing: border-box;
-            outline: none;
-            transition: all 0.2s ease;
+            box-sizing: border-box; outline: none; transition: all 0.2s ease;
         }
-        input:focus {
-            border-color: var(--mbank-green);
-            box-shadow: 0 0 0 3px rgba(36, 200, 81, 0.15);
-        }
-        .card-row {
-            display: flex;
-            gap: 16px;
-        }
-        .flex-1 {
-            flex: 1;
-        }
-        #cvv_block {
-            transition: all 0.3s ease;
-        }
+        /* Стили для валидации */
+        input.valid { border-color: var(--mbank-green); box-shadow: 0 0 0 3px rgba(36, 200, 81, 0.15); }
+        input.invalid { border-color: var(--error-red); box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15); }
+        
+        .card-row { display: flex; gap: 16px; }
+        .flex-1 { flex: 1; }
         .btn-submit {
-            width: 100%;
-            padding: 16px;
+            width: 100%; padding: 16px;
             background: linear-gradient(135deg, var(--mbank-green), var(--mbank-dark-green));
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 12px;
-            box-shadow: 0 4px 12px rgba(36, 200, 81, 0.2);
-            transition: transform 0.1s ease;
+            color: white; border: none; border-radius: 14px;
+            font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px;
+            box-shadow: 0 4px 12px rgba(36, 200, 81, 0.2); transition: all 0.2s ease;
         }
-        .btn-submit:active {
-            transform: scale(0.98);
+        /* Выключенная кнопка, если карта не прошла проверку */
+        .btn-submit:disabled {
+            background: #d1d1d6 !important;
+            color: #8e8e93; cursor: not-allowed; box-shadow: none;
         }
-        .card-type-badge {
-            position: absolute;
-            right: 14px;
-            top: 38px;
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--mbank-green);
-        }
+        .card-type-badge { position: absolute; right: 14px; top: 38px; font-size: 12px; font-weight: bold; }
+        .status-text { font-size: 12px; margin-top: 4px; display: block; }
     </style>
 </head>
 <body>
@@ -118,13 +65,14 @@
 <div class="app-container">
     <div class="header">
         <h2>MBANK Валидатор 💳</h2>
-        <p>Введите данные карты для проверки структуры</p>
+        <p>Умная проверка Луна на стороне клиента</p>
     </div>
     
     <div class="input-group">
         <label for="card_number">Номер карты</label>
         <input type="text" id="card_number" inputmode="numeric" placeholder="4314 2511 ...." maxlength="22">
         <span id="card_type_text" class="card-type-badge"></span>
+        <span id="validation_status" class="status-text"></span>
     </div>
 
     <div class="card-row">
@@ -138,68 +86,115 @@
         </div>
     </div>
 
-    <button class="btn-submit" onclick="sendCardData()">Проверить данные</button>
+    <button class="btn-submit" id="submit_btn" onclick="sendCardData()" disabled>Карта невалидна 🔒</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+    tg.expand(); tg.ready();
 
     const cardInput = document.getElementById('card_number');
     const dateInput = document.getElementById('card_date');
     const cvvBlock = document.getElementById('cvv_block');
     const cvvInput = document.getElementById('card_cvv');
     const typeBadge = document.getElementById('card_type_text');
+    const statusText = document.getElementById('validation_status');
+    const submitBtn = document.getElementById('submit_btn');
 
-    // Логика форматирования и скрытия полей
+    // JavaScript реализация алгоритма Луна
+    function validateLuhn(cardNumber) {
+        let num = cardNumber.replace(/\s+/g, '');
+        if (!/^\d{16,19}$/.test(num)) return false;
+
+        let sum = 0;
+        for (let i = 0; i < num.length; i++) {
+            let intVal = parseInt(num.substr(i, 1));
+            if (i % 2 === (num.length % 2 === 0 ? 0 : 1)) {
+                intVal *= 2;
+                if (intVal > 9) intVal -= 9;
+            }
+            sum += intVal;
+        }
+        return (sum % 10 === 0);
+    }
+
+    // Проверка всей формы для активации кнопки
+    function checkFormValidity() {
+        let rawCard = cardInput.value.replace(/\s+/g, '');
+        let isLuhnValid = validateLuhn(rawCard);
+        let isDateValid = /^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(dateInput.value);
+        
+        let isCvvValid = true;
+        if (!rawCard.startsWith('9417')) { // Если НЕ Элкарт, нужен CVV
+            isCvvValid = /^\d{3}$/.test(cvvInput.value);
+        }
+
+        if (isLuhnValid && isDateValid && isCvvValid) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Отправить боту 🚀";
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Карта невалидна 🔒";
+        }
+    }
+
+    // Слушатель ввода номера карты
     cardInput.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         
-        // Интеллектуальное определение типа карты на лету
+        // Определение БИН-кода
         if (value.startsWith('9417')) {
-            typeBadge.innerText = 'ЭЛКАРТ';
-            cvvBlock.style.display = 'none'; // Полностью убираем CVV для Элкарт
-            cvvInput.value = '';
+            typeBadge.innerText = 'ЭЛКАРТ 🇰🇬'; typeBadge.style.color = '#24c851';
+            cvvBlock.style.display = 'none'; cvvInput.value = '';
         } else if (value.startsWith('4')) {
-            typeBadge.innerText = 'VISA';
-            cvvBlock.style.display = 'block';
-        } else if (value.startsWith('5')) {
-            typeBadge.innerText = 'MC';
+            typeBadge.innerText = 'VISA 💳'; typeBadge.style.color = '#004194';
             cvvBlock.style.display = 'block';
         } else {
-            typeBadge.innerText = '';
-            cvvBlock.style.display = 'block';
+            typeBadge.innerText = ''; cvvBlock.style.display = 'block';
         }
 
-        // Разбивка по 4 цифры
+        // Динамическая подсветка Луна
+        if (value.length >= 16) {
+            if (validateLuhn(value)) {
+                cardInput.className = 'valid';
+                statusText.innerText = '🟢 Карта математически существует';
+                statusText.style.color = 'var(--mbank-green)';
+            } else {
+                cardInput.className = 'invalid';
+                statusText.innerText = '🔴 Ошибка: Несуществующий номер';
+                statusText.style.color = 'var(--error-red)';
+            }
+        } else {
+            cardInput.className = ''; statusText.innerText = '';
+        }
+
         let matches = value.match(/\d{1,4}/g);
         e.target.value = matches ? matches.join(' ') : value;
+        checkFormValidity();
     });
 
-    // Форматирование даты (ММ/ГГ)
     dateInput.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
-        if (value.length > 2) {
-            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        } else {
-            e.target.value = value;
-        }
+        if (value.length > 2) e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        if (e.target.value.length === 5) {
+            if (/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(e.target.value)) dateInput.className = 'valid';
+            else dateInput.className = 'invalid';
+        } else { dateInput.className = ''; }
+        checkFormValidity();
     });
 
-    // Отправка JSON строки обратно боту
-    function sendCardData() {
-        if (!cardInput.value || !dateInput.value) {
-            tg.showAlert("Пожалуйста, заполните все обязательные поля!");
-            return;
-        }
+    cvvInput.addEventListener('input', () => {
+        if (cvvInput.value.length === 3) cvvInput.className = 'valid';
+        else cvvInput.className = '';
+        checkFormValidity();
+    });
 
+    function sendCardData() {
         const payload = {
             number: cardInput.value,
             date: dateInput.value,
             cvv: cvvInput.value || "NOT_REQUIRED"
         };
-        
         tg.sendData(JSON.stringify(payload));
         tg.close();
     }
