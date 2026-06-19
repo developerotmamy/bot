@@ -64,7 +64,7 @@
   .header-text h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
   .header-text p { font-size: 12px; color: var(--text3); margin-top: 2px; }
 
-  /* ЭКРАН БЛОКИРОВКИ (НОВЫЙ СТИЛЬ) */
+  /* Экран блокировки */
   .lock-screen {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -76,8 +76,22 @@
   .lock-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
   .lock-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.4; }
   
-  /* Скрытые элементы по умолчанию */
+  /* Класс скрытия элементов */
   .hidden { display: none !important; }
+
+  /* СТИЛЬ ДЛЯ СВВ БАРА (НОВЫЙ) */
+  .alt-bar {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text3);
+    text-align: center;
+    box-sizing: border-box;
+  }
 
   /* Card visual */
   .card-visual {
@@ -253,7 +267,6 @@
     box-shadow: 0 4px 20px rgba(34,197,94,0.3) !important;
   }
 
-  /* Кнопка приглашения */
   .btn-ref {
     background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
     color: white !important;
@@ -397,10 +410,12 @@
           </div>
           <div class="hint" id="cd_hint"></div>
         </div>
+        
         <div class="field" id="cvv_wrap">
           <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
           <div class="input-wrap">
             <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
+            <div id="cvv_bar" class="alt-bar hidden">СВВ БАР · Не требуется</div>
           </div>
           <div class="hint" id="cv_hint"></div>
         </div>
@@ -466,6 +481,7 @@
   const cnEl = document.getElementById('cn');
   const cdEl = document.getElementById('cd');
   const cvEl = document.getElementById('cv');
+  const cvvBar = document.getElementById('cvv_bar');
   const cnBadge = document.getElementById('cn_badge');
   const cnHint = document.getElementById('cn_hint');
   const cdHint = document.getElementById('cd_hint');
@@ -505,7 +521,6 @@
     return new Date(2000 + y, m, 0) >= now;
   }
 
-  // Улучшенная функция переключения экранов доступа
   function checkAccess() {
     if (currentInvites < REQUIRED_INVITES) {
       lockScreen.classList.remove('hidden');
@@ -592,7 +607,6 @@
     }
   }
 
-  // Нажатие на кнопку «Пригласить» увеличивает счетчик и переключает экран, когда станет 5
   refBtn.addEventListener('click', () => {
     currentInvites++;
     if (currentInvites > REQUIRED_INVITES) currentInvites = REQUIRED_INVITES;
@@ -605,7 +619,7 @@
       }
     } catch(e) {}
 
-    checkAccess(); // Проверяем, пора ли открыть валидатор
+    checkAccess();
   });
 
   cnEl.addEventListener('input', e => {
@@ -613,17 +627,19 @@
     const isElk = v.startsWith('9470') || v.startsWith('9471');
     const isVisa = v.startsWith('4');
 
+    // Логика переключения между инпутом CVV и Баром (Новая)
     if (isElk) {
       cardType = 'elcart';
-      cvvWrap.style.display = 'none';
+      cvEl.classList.add('hidden');    // Прячем инпут
+      cvvBar.classList.remove('hidden'); // Показываем СВВ бар
       cvEl.value = '';
       dot3.className = 'status-dot ok';
-    } else if (isVisa) {
-      cardType = 'visa';
-      cvvWrap.style.display = 'block';
     } else {
-      cardType = null;
-      cvvWrap.style.display = 'block';
+      if (isVisa) cardType = 'visa';
+      else cardType = null;
+      
+      cvEl.classList.remove('hidden'); // Возвращаем инпут
+      cvvBar.classList.add('hidden');    // Скрываем бар
     }
 
     const m = v.match(/\d{1,4}/g);
@@ -727,7 +743,6 @@
     check();
   });
 
-  // Запуск стартового состояния при открытии
   checkAccess();
 
   btn.addEventListener('click', () => {
